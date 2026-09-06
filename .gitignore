@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Artifacts written by notebook demos
+*.joblib
+!builders/*.joblib
+
+# Local working notes, not part of the published course.
+# Delete this line if you want the rebuild log tracked.
+.fe_series_state.md
+
+# Internal planning docs from the rebuild.
+# Delete this line if you want them tracked.
+docs/superpowers/
+
+# Syllabus the series was written against, kept local.
+# Delete this line if you want it tracked.
+Plan.md
+
+# Notebook generator scripts and pre-rebuild backups, kept local.
+# Delete this line if you want them tracked.
+builders/
