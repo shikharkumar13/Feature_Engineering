@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Feature Engineering for Categorical Variables &mdash; Notebook 4 Companion Article</title>
+<style>
+:root{
+  --paper:#FAF8F3;
+  --paper-2:#F1EDE2;
+  --ink:#232420;
+  --ink-soft:#565246;
+  --teal:#0E6B62;
+  --teal-deep:#0A4F49;
+  --brick:#A8442F;
+  --brick-soft:#C97A62;
+  --line:#E1DACB;
+  --line-soft:#EAE4D6;
+  --code-bg:#F3EFE3;
+  --code-border:#0E6B62;
+  --out-border:#B9B197;
+  --amber:#9C6B2E;
+  --maxw:700px;
+  --maxw-wide:920px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+  font-size:18px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.sans{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+a{color:var(--teal-deep);text-decoration-thickness:1px;}
+a:hover{color:var(--brick);}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+.wrap-wide{max-width:var(--maxw-wide);margin:0 auto;padding:0 24px;}
+
+header.hero{
+  padding:76px 24px 56px;
+  border-bottom:1px solid var(--line);
+  background:
+    radial-gradient(ellipse 900px 300px at 15% -10%, rgba(14,107,98,0.07), transparent),
+    radial-gradient(ellipse 700px 260px at 100% 0%, rgba(168,68,47,0.06), transparent);
+}
+.kicker{
+  font-family:inherit;
+  font-style:italic;
+  color:var(--ink-soft);
+  font-size:17px;
+  margin:0 0 14px;
+}
+h1.title{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-size:44px;
+  line-height:1.14;
+  letter-spacing:-0.01em;
+  margin:0 0 20px;
+  color:var(--ink);
+  font-weight:700;
+  max-width:640px;
+}
+.hero-sub{
+  font-size:20px;
+  color:var(--ink-soft);
+  max-width:600px;
+  margin:0 0 22px;
+}
+.hero-meta{
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-size:14px;
+  color:var(--ink-soft);
+  border-top:1px solid var(--line);
+  padding-top:18px;
+  max-width:640px;
+}
+.hero-meta span{margin-right:18px;display:inline-block;}
+.hero-meta span b{color:var(--ink);font-weight:600;}
+
+article{padding:52px 0 20px;}
+section.sec{padding:14px 0 44px;}
+section.sec + section.sec{border-top:1px solid var(--line-soft);padding-top:44px;}
+
+h2.sec-title{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-size:29px;
+  font-weight:700;
+  color:var(--teal-deep);
+  margin:0 0 6px;
+  line-height:1.28;
+}
+h2.sec-title .num{color:var(--brick);margin-right:10px;}
+.sec-dek{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  color:var(--ink-soft);
+  font-size:16px;
+  margin:0 0 28px;
+}
+h3.sub{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-size:21px;
+  font-weight:700;
+  color:var(--ink);
+  margin:34px 0 12px;
+}
+h4.subsub{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-size:17px;
+  font-weight:700;
+  color:var(--teal-deep);
+  margin:26px 0 10px;
+}
+p{margin:0 0 18px;}
+ul,ol{margin:0 0 18px;padding-left:26px;}
+li{margin-bottom:8px;}
+strong{color:var(--ink);}
+code, .inline-code{
+  font-family:SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+  background:var(--paper-2);
+  padding:1px 5px;
+  border-radius:3px;
+  font-size:0.86em;
+  color:var(--teal-deep);
+}
+
+blockquote{
+  margin:26px 0;
+  padding:4px 0 4px 22px;
+  border-left:3px solid var(--brick-soft);
+  font-style:italic;
+  color:var(--ink-soft);
+  font-size:19px;
+}
+
+.callout{
+  margin:26px 0;
+  padding:18px 22px;
+  border-radius:6px;
+  font-size:16.5px;
+}
+.callout p:last-child{margin-bottom:0;}
+.callout .callout-label{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-weight:700;
+  font-size:13px;
+  display:block;
+  margin-bottom:8px;
+  color:inherit;
+}
+.callout.insight{background:#EAF3F1;border:1px solid #CFE3DF;color:var(--teal-deep);}
+.callout.insight .callout-label{color:var(--teal);}
+.callout.watch{background:#F7ECE7;border:1px solid #EBD3C8;color:#7A3220;}
+.callout.watch .callout-label{color:var(--brick);}
+.callout.rule{background:#F4F1E7;border:1px solid #E4DCC3;color:#4A4531;}
+.callout.rule .callout-label{color:var(--amber);}
+
+.code-wrap, .output-wrap{
+  max-width:var(--maxw-wide);
+  margin:0 auto 4px;
+  width:100%;
+}
+.blk-caption{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-size:12.5px;
+  color:var(--ink-soft);
+  letter-spacing:0.02em;
+  padding:0 2px 6px;
+}
+.out-caption{color:#7d795e;padding-top:2px;}
+pre.code{
+  background:var(--code-bg);
+  border-left:3px solid var(--code-border);
+  border-radius:0 5px 5px 0;
+  padding:16px 18px;
+  overflow-x:auto;
+  margin:0 0 18px;
+  font-size:14.5px;
+  line-height:1.55;
+}
+pre.code code{background:none;padding:0;color:inherit;font-size:inherit;}
+pre.out{
+  background:#FBFAF6;
+  border-left:3px solid var(--out-border);
+  border-radius:0 5px 5px 0;
+  padding:14px 18px;
+  overflow-x:auto;
+  margin:0 0 18px;
+  font-size:13.8px;
+  line-height:1.5;
+  color:#3c3a30;
+  font-family:SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+  white-space:pre;
+}
+pre.out.out-err{border-left-color:var(--brick);color:#7A3220;}
+.out-img{
+  margin:0 0 18px;
+  padding:14px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:6px;
+}
+.out-img img{width:100%;display:block;border-radius:2px;}
+
+/* pygments token colors, tuned to palette */
+.hl .c, .hl .c1, .hl .cm, .hl .ch, .hl .cs, .hl .cpf { color:#8A8371; font-style:italic; }
+.hl .k, .hl .kc, .hl .kd, .hl .kn, .hl .kr, .hl .kp, .hl .ow { color:var(--teal); font-weight:600; }
+.hl .s, .hl .s1, .hl .s2, .hl .sa, .hl .sb, .hl .sc, .hl .dl, .hl .sh, .hl .ss, .hl .si { color:var(--amber); }
+.hl .nb, .hl .bp { color:var(--teal-deep); }
+.hl .nf { color:#5A5544; font-weight:600;}
+.hl .m, .hl .mi, .hl .mf, .hl .il { color:#7A5C2E; }
+.hl .o { color:#6b6656; }
+.hl .err{border:none;}
+
+table.tbl{
+  width:100%;
+  border-collapse:collapse;
+  margin:22px 0 26px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-size:15px;
+}
+table.tbl th{
+  text-align:left;
+  border-bottom:2px solid var(--ink);
+  padding:9px 12px;
+  color:var(--ink);
+  font-weight:700;
+}
+table.tbl td{
+  border-bottom:1px solid var(--line);
+  padding:9px 12px;
+  vertical-align:top;
+  color:var(--ink);
+}
+table.tbl tr:last-child td{border-bottom:none;}
+
+.diagram{
+  max-width:var(--maxw-wide);
+  margin:26px auto 30px;
+  padding:20px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:8px;
+}
+.diagram svg{display:block;width:100%;height:auto;}
+.diagram-cap{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-align:center;
+  margin-top:10px;
+}
+
+.takeaway-box{
+  background:var(--teal-deep);
+  color:#F4F1E7;
+  border-radius:10px;
+  padding:36px 34px;
+  margin:0 0 20px;
+}
+.takeaway-box h2.sec-title{color:#fff;}
+.takeaway-box h2.sec-title .num{color:#F0B79A;}
+.takeaway-box p{color:#E7EFEC;}
+.takeaway-box strong{color:#fff;}
+.takeaway-box .inline-code{background:rgba(255,255,255,0.14);color:#F0DFC8;}
+
+footer{
+  padding:44px 24px 70px;
+  border-top:1px solid var(--line);
+  margin-top:20px;
+}
+footer p{color:var(--ink-soft);font-size:15px;}
+
+.hr-divider{
+  border:none;
+  border-top:1px solid var(--line);
+  margin:38px 0;
+}
+
+@media (max-width:760px){
+  body{font-size:16.5px;}
+  h1.title{font-size:32px;}
+  h2.sec-title{font-size:24px;}
+  header.hero{padding:52px 18px 40px;}
+  .takeaway-box{padding:26px 20px;}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Feature Engineering &middot; Notebook 4 companion article</p>
+    <h1 class="title">Feature Engineering for Categorical Variables</h1>
+    <p class="hero-sub">Models do arithmetic. Categories are labels. Every technique in this notebook bridges that gap, and every single one of them makes a claim about the data that can turn out true or false. Turning a contract length into 0, 1, 2 asserts that two years sits above one year by the same distance one year sits above month-to-month. Make that same claim about a payment method and the model believes a lie, quietly, forever.</p>
+    <div class="hero-meta">
+      <span>Dataset: <b>Telco Customer Churn</b>, plus one engineered 322-category column</span>
+      <span>Stack: <b>pandas &middot; scikit-learn</b></span>
+      <span>Companion to: <b>Notebook 4</b></span>
+    </div>
+  </div>
+</header>
+
+<article>
+
+<section class="sec">
+  <div class="wrap">
+    <p>Encoding gets treated, in a lot of code, as a formatting step: strings go in, numbers come out, the model stops throwing errors, move on. That framing misses what's actually happening. Every encoding decision is a specific claim about the relationships inside a categorical column, and scikit-learn will faithfully build whichever claim you hand it, true or not. Assert that a two-year contract sits twice as far from month-to-month as a one-year contract does, and if that happens to match reality, the model gets a genuinely useful number for free. Assert the same kind of thing about which payment method someone uses, where no such distance exists, and the model doesn't reject the claim. It just learns something false and uses it with complete confidence.</p>
+
+    <p>This notebook works through six answers to the same underlying question, each with a real, measured cost and a real, measured benefit: label and ordinal encoding, one-hot encoding, target encoding, frequency encoding, the hashing trick, and the specific production failures, unseen and rare categories, that only show up after a model ships. The throughline across all six is that none of them is simply correct or simply wrong. Each one wins under conditions that can be stated precisely, and this notebook spends its effort finding those conditions rather than handing over a single default to reach for every time.</p>
+
+    <h3 class="sub">The dataset, and one engineered column</h3>
+    <p>Telco suits this notebook well for a simple reason: almost every column in it is categorical. What it doesn't have on its own is a column with enough distinct categories to make the harder techniques necessary, since one-hot encoding is the right answer for anything with a handful of categories, and the interesting trade-offs only appear once a column has more categories than anyone would want to one-hot without thinking twice.</p>
+
+    <p>So this notebook builds one. Each customer subscribes to some specific combination of nine separate services, and that combination describes their account in a way no single existing column does. Joining those nine columns into one string produces a real high-cardinality feature, and it's the kind of column you'd actually construct on a real team, not a synthetic one invented purely to make a demonstration work.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Imports and setup</div><pre class="code"><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">ColumnTransformer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.feature_extraction</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeatureHasher</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">StratifiedKFold</span><span class="p">,</span> <span class="n">cross_val_score</span><span class="p">,</span> <span class="n">train_test_split</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">roc_auc_score</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_pipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">OneHotEncoder</span><span class="p">,</span> <span class="n">OrdinalEncoder</span><span class="p">,</span> <span class="n">StandardScaler</span><span class="p">,</span> <span class="n">TargetEncoder</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;seaborn-v0_8-whitegrid&#39;</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_columns&#39;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.width&#39;</span><span class="p">,</span> <span class="mi">170</span><span class="p">)</span>
+
+<span class="n">RANDOM_STATE</span> <span class="o">=</span> <span class="mi">42</span>
+</code></pre>
+</div>
+    <div class="code-wrap">
+<div class="blk-caption">Loading Telco, and building the bundle column</div><pre class="code"><code><span class="n">telco</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;datasets/telco_churn.csv&#39;</span><span class="p">)</span>
+<span class="n">telco</span><span class="p">[</span><span class="s1">&#39;TotalCharges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;TotalCharges&#39;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;coerce&#39;</span><span class="p">)</span>
+<span class="n">telco</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;tenure&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">churned</span> <span class="o">=</span> <span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;Churn&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Yes&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">NUMERIC</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tenure&#39;</span><span class="p">,</span> <span class="s1">&#39;MonthlyCharges&#39;</span><span class="p">,</span> <span class="s1">&#39;TotalCharges&#39;</span><span class="p">]</span>
+
+<span class="c1"># Build one high-cardinality column out of the nine service columns</span>
+<span class="n">SERVICES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PhoneService&#39;</span><span class="p">,</span> <span class="s1">&#39;MultipleLines&#39;</span><span class="p">,</span> <span class="s1">&#39;InternetService&#39;</span><span class="p">,</span> <span class="s1">&#39;OnlineSecurity&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;OnlineBackup&#39;</span><span class="p">,</span> <span class="s1">&#39;DeviceProtection&#39;</span><span class="p">,</span> <span class="s1">&#39;TechSupport&#39;</span><span class="p">,</span> <span class="s1">&#39;StreamingTV&#39;</span><span class="p">,</span> <span class="s1">&#39;StreamingMovies&#39;</span><span class="p">]</span>
+<span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[</span><span class="n">SERVICES</span><span class="p">]</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rows          : </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">telco</span><span class="p">)</span><span class="si">:</span><span class="s1">,</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Churn rate    : </span><span class="si">{</span><span class="n">churned</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s1">.1%</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unique bundles: </span><span class="si">{</span><span class="n">telco</span><span class="p">[</span><span class="s2">&quot;bundle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Two example bundles:&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">b</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Rows          : 7,032
+Churn rate    : 26.6%
+Unique bundles: 322
+
+Two example bundles:
+  Yes|No|No|No internet service|No internet service|No internet service|No internet service|No internet service|No internet service
+  Yes|Yes|No|No internet service|No internet service|No internet service|No internet service|No internet service|No internet service</pre></div>
+
+    <p>Three hundred and twenty-two distinct combinations of nine yes/no and multi-value service columns, out of 7,032 customers. That's the column this notebook returns to throughout: informative, as the next section establishes directly, and genuinely too large to hand a one-hot encoder without consequences.</p>
+
+    <h2 class="sec-title"><span class="num">1</span>Reading a categorical column before encoding it</h2>
+    <p class="sec-dek">Two questions decide the right method, and answering them honestly takes longer than writing the encoding line itself</p>
+
+    <p><strong>Does the order mean anything?</strong> An <strong>ordinal</strong> column carries a genuine ranking. <code class="inline-code">Contract</code> runs month-to-month, one year, two year, and that sequence describes steadily increasing commitment. A <strong>nominal</strong> column carries no such ranking. <code class="inline-code">PaymentMethod</code> has four values, and no defensible argument puts any one of them above another.</p>
+
+    <p>Pandas cannot answer this question for you, no matter how the data is stored. Both kinds of column arrive as plain strings and look byte-for-byte identical to the computer. The distinction lives entirely in domain knowledge that has to come from a person, which is why notebook 1 declared <code class="inline-code">Contract</code> an ordered <code class="inline-code">Categorical</code> the moment that knowledge was available, rather than leaving it as a plain string for pandas to guess at.</p>
+
+    <p><strong>How many distinct values are there?</strong> Low cardinality makes one-hot encoding comfortable, in every sense that matters: few new columns, plenty of rows behind each one, nothing to think hard about. High cardinality makes it uncomfortable, and every alternative to it involves a real trade-off rather than a free upgrade.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">An inventory of every categorical column, bundle included</div><pre class="code"><code><span class="n">categorical_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">telco</span><span class="o">.</span><span class="n">columns</span>
+                    <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NUMERIC</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;customerID&#39;</span><span class="p">,</span> <span class="s1">&#39;Churn&#39;</span><span class="p">,</span> <span class="s1">&#39;bundle&#39;</span><span class="p">]]</span>
+
+<span class="n">inventory</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">&#39;column&#39;</span><span class="p">:</span> <span class="n">categorical_cols</span><span class="p">,</span>
+    <span class="s1">&#39;n_categories&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">telco</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">categorical_cols</span><span class="p">],</span>
+    <span class="s1">&#39;most_common&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">telco</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">categorical_cols</span><span class="p">],</span>
+    <span class="s1">&#39;rarest_count&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">telco</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">categorical_cols</span><span class="p">],</span>
+<span class="p">})</span>
+<span class="n">inventory</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">inventory</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;bundle (engineered)&#39;</span><span class="p">,</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">(),</span>
+                                 <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">28</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;...&#39;</span><span class="p">,</span>
+                                 <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">inventory</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">             column  n_categories                     most_common  rarest_count
+             gender             2                            Male          3483
+      SeniorCitizen             2                               0          1142
+            Partner             2                              No          3393
+         Dependents             2                              No          2099
+       PhoneService             2                             Yes           680
+      MultipleLines             3                              No           680
+    InternetService             3                     Fiber optic          1520
+     OnlineSecurity             3                              No          1520
+       OnlineBackup             3                              No          1520
+   DeviceProtection             3                              No          1520
+        TechSupport             3                              No          1520
+        StreamingTV             3                              No          1520
+    StreamingMovies             3                              No          1520
+           Contract             3                  Month-to-month          1472
+   PaperlessBilling             2                             Yes          2864
+      PaymentMethod             4                Electronic check          1521
+bundle (engineered)           322 Yes|No|No|No internet servic...             1</pre></div>
+
+    <p>Sixteen original columns, each holding between two and four categories. The engineered <code class="inline-code">bundle</code> holds 322. That gap is close to the entire subject of this notebook stated as a single number. Every one of those sixteen original columns can be one-hot encoded without a second thought, producing at most four new columns each. Doing the identical thing to <code class="inline-code">bundle</code> produces 322 new columns, and section 3 measures directly how badly that goes.</p>
+
+    <p>Before spending any real effort on how to encode <code class="inline-code">bundle</code>, it's worth confirming the column is worth encoding carefully at all. A column with no relationship to the target doesn't deserve careful treatment, no matter how many categories it has.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Does churn actually vary by bundle?</div><pre class="code"><code><span class="n">bundle_stats</span> <span class="o">=</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;bundle&#39;</span><span class="p">:</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">],</span> <span class="s1">&#39;churned&#39;</span><span class="p">:</span> <span class="n">churned</span><span class="p">})</span>
+                <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;bundle&#39;</span><span class="p">)[</span><span class="s1">&#39;churned&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">])</span>
+                <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="s1">&#39;churn_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="s1">&#39;customers&#39;</span><span class="p">}))</span>
+
+<span class="n">common</span> <span class="o">=</span> <span class="n">bundle_stats</span><span class="p">[</span><span class="n">bundle_stats</span><span class="p">[</span><span class="s1">&#39;customers&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;churn_rate&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Bundles with at least 20 customers: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">common</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Their churn rates run from </span><span class="si">{</span><span class="n">common</span><span class="p">[</span><span class="s2">&quot;churn_rate&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s1">.1%</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">common</span><span class="p">[</span><span class="s2">&quot;churn_rate&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s1">.1%</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(the dataset average is </span><span class="si">{</span><span class="n">churned</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s1">.1%</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Lowest risk bundles:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Highest risk bundles:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Bundles with at least 20 customers: 76
+Their churn rates run from 0.0% to 73.9%
+(the dataset average is 26.6%)
+
+Lowest risk bundles:
+                                                 churn_rate  customers
+bundle                                                                
+Yes|Yes|DSL|Yes|Yes|Yes|Yes|No|No                       0.0         21
+Yes|Yes|DSL|No|Yes|Yes|Yes|Yes|Yes                      0.0         25
+No|No phone service|DSL|Yes|Yes|Yes|Yes|Yes|Yes         0.0         25
+
+Highest risk bundles:
+                                         churn_rate  customers
+bundle                                                        
+Yes|Yes|Fiber optic|No|No|No|No|Yes|Yes       0.664        110
+Yes|Yes|Fiber optic|No|No|No|No|No|Yes        0.727         77
+Yes|No|Fiber optic|No|No|No|No|Yes|No         0.739         69</pre></div>
+
+    <p>Churn ranges from 0% to 73.9% depending purely on which services a customer has, against a 26.6% average across the whole dataset. This is not a column to treat carelessly. The table also surfaces the exact reason a raw count matters alongside a rate: some bundles appear well over a thousand times, and some appear only twice, and a churn rate measured from two customers is not remotely the same quality of evidence as one measured from a thousand. Section 4 returns to this directly.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Establishing one baseline every encoding gets measured against</div><pre class="code"><code><span class="n">cv</span> <span class="o">=</span> <span class="n">StratifiedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">logreg_auc</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="c1"># Scaled logistic regression: sensitive to how categories are encoded</span>
+    <span class="k">return</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">make_pipeline</span><span class="p">(</span><span class="n">StandardScaler</span><span class="p">(),</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">3000</span><span class="p">)),</span>
+                           <span class="n">X</span><span class="p">,</span> <span class="n">churned</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">forest_auc</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                           <span class="n">X</span><span class="p">,</span> <span class="n">churned</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+
+<span class="n">numeric_only</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[</span><span class="n">NUMERIC</span><span class="p">]</span>
+<span class="n">BASELINE</span> <span class="o">=</span> <span class="n">logreg_auc</span><span class="p">(</span><span class="n">numeric_only</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Baseline, the three numeric columns and nothing else: AUC </span><span class="si">{</span><span class="n">BASELINE</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Every encoding below gets compared against this number.&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Baseline, the three numeric columns and nothing else: AUC 0.8087
+Every encoding below gets compared against this number.</pre></div>
+  </div>
+</section>
+
+
+<section class="sec">
+  <div class="wrap">
+    <h2 class="sec-title"><span class="num">2</span>Label and ordinal encoding</h2>
+    <p class="sec-dek">The simplest possible technique, and a default behavior worth knowing about before it decides something for you</p>
+
+    <p>The simplest approach to turning a category into a number assigns each one a plain integer: <code class="inline-code">Bank transfer</code> becomes 0, <code class="inline-code">Credit card</code> becomes 1, and so on. When the column is genuinely ordered, this is exactly the right technique, and it has a name for that case: <strong>ordinal encoding</strong>. When the column carries no order at all, the identical mechanical operation is usually called <strong>label encoding</strong>, and it quietly inserts a ranking that was never there to begin with.</p>
+
+    <p>One default is worth knowing before it makes a decision on your behalf: when you don't specify an order yourself, scikit-learn sorts the categories alphabetically.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">The order scikit-learn assigns when nobody tells it otherwise</div><pre class="code"><code><span class="n">payment_categories</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;PaymentMethod&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The order sklearn assigns by default, purely alphabetical:&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">payment_categories</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1"> = </span><span class="si">{</span><span class="n">cat</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;That numbering claims Mailed check (3) is three units &quot;more&quot; than Bank transfer (0),&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;and that Credit card (1) sits between them. None of that means anything.&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">The order sklearn assigns by default, purely alphabetical:
+  0 = Bank transfer (automatic)
+  1 = Credit card (automatic)
+  2 = Electronic check
+  3 = Mailed check
+
+That numbering claims Mailed check (3) is three units &quot;more&quot; than Bank transfer (0),
+and that Credit card (1) sits between them. None of that means anything.</pre></div>
+
+    <p>That default numbering asserts that <code class="inline-code">Mailed check</code> sits three full units above <code class="inline-code">Bank transfer</code>, and that <code class="inline-code">Credit card</code> sits precisely between the two. None of that reflects anything real about how these four payment methods relate to each other. It reflects only which one happens to start with which letter.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Measuring what that costs, on a column with no real order</div><pre class="code"><code><span class="n">label_encoded</span> <span class="o">=</span> <span class="n">numeric_only</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
+    <span class="n">payment</span><span class="o">=</span><span class="n">OrdinalEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">telco</span><span class="p">[[</span><span class="s1">&#39;PaymentMethod&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+
+<span class="n">one_hot</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">numeric_only</span><span class="p">,</span>
+                     <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;PaymentMethod&#39;</span><span class="p">],</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;pay&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;encoding&quot;</span><span class="si">:</span><span class="s1">16s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;columns&quot;</span><span class="si">:</span><span class="s1">&gt;8s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;LogReg AUC&quot;</span><span class="si">:</span><span class="s1">&gt;12s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;RandomForest AUC&quot;</span><span class="si">:</span><span class="s1">&gt;18s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">58</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;label (0-3)&quot;</span><span class="si">:</span><span class="s1">16s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">label_encoded</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">label_encoded</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">forest_auc</span><span class="p">(</span><span class="n">label_encoded</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;18.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;one-hot&quot;</span><span class="si">:</span><span class="s1">16s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">one_hot</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">one_hot</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">forest_auc</span><span class="p">(</span><span class="n">one_hot</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;18.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">encoding          columns   LogReg AUC   RandomForest AUC
+----------------------------------------------------------</pre><pre class="out">label (0-3)             4       0.8088             0.7827</pre><pre class="out">one-hot                 7       0.8175             0.7795</pre></div>
+
+    <p>Label encoding costs the logistic regression 0.0087 AUC, falling from one-hot's 0.8175 down to 0.8088. The random forest, by contrast, is barely touched, and if anything does marginally better with the single label column than with four separate one-hot columns. That split between the two model families isn't a coincidence, and it's worth understanding the mechanism rather than just the direction.</p>
+
+    <p>A <strong>linear model</strong> multiplies an encoded column by exactly one coefficient. Handed payment method encoded 0 through 3, it can only ever learn a single effect that rises or falls steadily as that number increases. Since the underlying ordering is arbitrary, no such steady effect genuinely exists in the data, and the model is left fitting a straight line through what amounts to noise. A <strong>tree</strong>, on the other hand, splits repeatedly: it can isolate the value 2 on its own with two well-placed cuts, and effectively reconstruct the original categories despite the meaningless numbering. Trees tolerate label encoding far better than linear models do, which is exactly why practitioners using gradient boosting often use it without much visible harm.</p>
+
+    <p>Now the same mistake, at a scale where it stops being a rounding error.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">The extreme version: label-encoding a 322-category column</div><pre class="code"><code><span class="n">label_bundle</span> <span class="o">=</span> <span class="n">numeric_only</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
+    <span class="n">bundle</span><span class="o">=</span><span class="n">OrdinalEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">telco</span><span class="p">[[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Bundle label-encoded as integers 0 to </span><span class="si">{</span><span class="n">telco</span><span class="p">[</span><span class="s2">&quot;bundle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  LogReg AUC       </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">label_bundle</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  Baseline (no bundle at all) </span><span class="si">{</span><span class="n">BASELINE</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RandomForest AUC </span><span class="si">{</span><span class="n">forest_auc</span><span class="p">(</span><span class="n">label_bundle</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Bundle label-encoded as integers 0 to 321:
+  LogReg AUC       0.8087
+  Baseline (no bundle at all) 0.8087</pre><pre class="out">  RandomForest AUC 0.7940</pre></div>
+
+    <p>The logistic regression scores 0.8087, identical to the baseline that ignores <code class="inline-code">bundle</code> entirely. A column whose churn rates ranged from 0% to 73.9% contributed exactly nothing, because it was handed to a linear model as an arbitrary integer between 0 and 321, sorted alphabetically. The information was never absent from the data. It was destroyed by the encoding. The random forest reaches 0.7940 and does extract something real, since it can still carve the integer line into meaningful pieces, though it's a poor way to spend a column with this much genuine signal in it either way.</p>
+
+    <p>Now the case where an order genuinely exists, and ordinal encoding should be able to use it well. Notebook 1 already measured churn at 42.7% for month-to-month, 11.3% for one year, and 2.8% for two year, a clean, monotone decline as commitment increases.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Three versions of the same column: correct order, scrambled order, and no order claimed at all</div><pre class="code"><code><span class="n">correct_order</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Month-to-month&#39;</span><span class="p">,</span> <span class="s1">&#39;One year&#39;</span><span class="p">,</span> <span class="s1">&#39;Two year&#39;</span><span class="p">]</span>
+<span class="n">wrong_order</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;One year&#39;</span><span class="p">,</span> <span class="s1">&#39;Two year&#39;</span><span class="p">,</span> <span class="s1">&#39;Month-to-month&#39;</span><span class="p">]</span>    <span class="c1"># alphabetical-ish, and meaningless</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">encode_with</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">numeric_only</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">contract</span><span class="o">=</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;Contract&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">({</span><span class="n">c</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">)}))</span>
+
+
+<span class="n">ordinal_right</span> <span class="o">=</span> <span class="n">encode_with</span><span class="p">(</span><span class="n">correct_order</span><span class="p">)</span>
+<span class="n">ordinal_wrong</span> <span class="o">=</span> <span class="n">encode_with</span><span class="p">(</span><span class="n">wrong_order</span><span class="p">)</span>
+<span class="n">contract_onehot</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">numeric_only</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;Contract&#39;</span><span class="p">],</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;contract&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;encoding&quot;</span><span class="si">:</span><span class="s1">34s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;columns&quot;</span><span class="si">:</span><span class="s1">&gt;8s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;LogReg AUC&quot;</span><span class="si">:</span><span class="s1">&gt;12s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">56</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;ordinal, correct order&quot;</span><span class="si">:</span><span class="s1">34s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">ordinal_right</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">ordinal_right</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;ordinal, meaningless order&quot;</span><span class="si">:</span><span class="s1">34s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">ordinal_wrong</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">ordinal_wrong</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;one-hot&quot;</span><span class="si">:</span><span class="s1">34s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">contract_onehot</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">contract_onehot</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">encoding                            columns   LogReg AUC
+--------------------------------------------------------
+ordinal, correct order                    4       0.8278
+ordinal, meaningless order                4       0.8197
+one-hot                                   6       0.8276</pre></div>
+
+    <p>Three results, each worth pulling apart on its own.</p>
+
+    <p><strong>Correct ordinal encoding reaches 0.8278 from a single column.</strong> One-hot reaches 0.8276 using three. The two are essentially tied, and the ordinal version gets there with a third of the columns, because the order supplied to it was real information the model would otherwise have had to reconstruct on its own from the raw categories.</p>
+
+    <p><strong>The wrong ordering costs 0.0081 AUC.</strong> Same technique, same column count, and the only thing that changed between this run and the correct one is which integer got assigned to which category. Ordinal encoding is only ever as good as the order you supply, and supplying a wrong one is worse than making no ordering claim at all.</p>
+
+    <p><strong>One-hot never had to be told anything.</strong> It makes no ordering claim whatsoever, so it cannot make a wrong one, and it recovered essentially the same pattern directly from the data. That safety is precisely what two extra columns buy you.</p>
+
+    <div class="callout rule">
+      <span class="callout-label">Practical guidance from this section</span>
+      <p>Use ordinal encoding when you genuinely know the order, and write that order out explicitly rather than trusting the default sort. Use one-hot when there's no order, or when you're not sure there is one. Never let alphabetical sorting decide a ranking for you, which is exactly what <code class="inline-code">OrdinalEncoder</code> and <code class="inline-code">LabelEncoder</code> do the moment you leave the order unspecified. And note that <code class="inline-code">LabelEncoder</code> is documented for encoding the target variable, not feature columns; <code class="inline-code">OrdinalEncoder</code> is the one built for features, since it accepts two-dimensional input and fits cleanly into a pipeline.</p>
+    </div>
+  </div>
+</section>
+
+
+<section class="sec">
+  <div class="wrap">
+    <h2 class="sec-title"><span class="num">3</span>One-hot encoding, and where it stops working</h2>
+    <p class="sec-dek">The default for nominal columns, for good reason, and also the technique people keep reaching for well past the point it stops helping</p>
+
+    <p>One-hot encoding creates a single binary column per category. A customer on a two-year contract gets a 1 in <code class="inline-code">contract_Two year</code> and a 0 in every other contract column. No ordering is implied anywhere in that scheme, and every category earns its own independent coefficient. It's the correct default for nominal columns, and there's a specific, easy-to-miss failure mode worth seeing directly before trusting it on a new column.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Fitting a one-hot encoder on a small sample, and seeing what goes missing</div><pre class="code"><code><span class="n">sample</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[[</span><span class="s1">&#39;PaymentMethod&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">sparse_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">encoded</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input, the first four customers:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Output:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">encoded</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">encoder</span><span class="o">.</span><span class="n">get_feature_names_out</span><span class="p">())</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Columns created : </span><span class="si">{</span><span class="n">encoded</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Categories in the full dataset: </span><span class="si">{</span><span class="n">telco</span><span class="p">[</span><span class="s2">&quot;PaymentMethod&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Input, the first four customers:
+            PaymentMethod
+         Electronic check
+             Mailed check
+             Mailed check
+Bank transfer (automatic)
+
+Output:
+ PaymentMethod_Bank transfer (automatic)  PaymentMethod_Electronic check  PaymentMethod_Mailed check
+                                       0                               1                           0
+                                       0                               0                           1
+                                       0                               0                           1
+                                       1                               0                           0
+
+Columns created : 3
+Categories in the full dataset: 4</pre></div>
+
+    <p>This is worth sitting with, because it's the entire argument for reaching for <code class="inline-code">OneHotEncoder</code> over the more convenient-looking <code class="inline-code">pd.get_dummies</code>. <code class="inline-code">PaymentMethod</code> has four real categories across the full dataset. Fitting on just these four sample rows, which happen to contain only three of them, produced exactly three columns. <code class="inline-code">Credit card (automatic)</code> gets no column at all, not because anything went wrong, but because the encoder fitting on this sample never once laid eyes on it.</p>
+
+    <p>That's harmless here, since this was deliberately fit on a small sample for demonstration. It becomes a genuine production outage when the identical thing happens between a training run and a batch of live traffic. <code class="inline-code">pd.get_dummies</code> looks at whatever data it's handed and creates columns for exactly the categories present in that data. Train on a file containing four payment methods and you get four columns; run the identical line next month on a batch that happens to contain only three, and you get three columns, quite possibly in a different order, and the model silently receives the wrong values sitting in the wrong positions with no error raised anywhere. <code class="inline-code">OneHotEncoder</code> avoids this by construction: it learns the full category list exactly once, during <code class="inline-code">fit</code>, and applies that same fixed list forever afterward, including columns for categories that happen to be entirely absent from whatever it's currently transforming. It belongs inside a pipeline for precisely the same reason every other transformer in this series does. <code class="inline-code">get_dummies</code> is fine for a quick, one-off look at the data; <code class="inline-code">OneHotEncoder</code> is what belongs in anything that will run more than once.</p>
+
+    <p>Now the failure that no amount of correct plumbing can fix, because it isn't a plumbing problem.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">One-hot encoding the full 322-category bundle column</div><pre class="code"><code><span class="n">bundle_onehot</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">numeric_only</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">],</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;approach&quot;</span><span class="si">:</span><span class="s1">34s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;columns&quot;</span><span class="si">:</span><span class="s1">&gt;8s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;LogReg AUC&quot;</span><span class="si">:</span><span class="s1">&gt;12s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">56</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;numeric only, bundle ignored&quot;</span><span class="si">:</span><span class="s1">34s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">numeric_only</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">BASELINE</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;bundle one-hot encoded&quot;</span><span class="si">:</span><span class="s1">34s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">bundle_onehot</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">bundle_onehot</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">approach                            columns   LogReg AUC
+--------------------------------------------------------
+numeric only, bundle ignored              3       0.8087</pre><pre class="out">bundle one-hot encoded                  325       0.8007</pre></div>
+
+    <p>One-hot encoding <code class="inline-code">bundle</code> makes the model measurably worse than ignoring the column outright, dropping AUC from 0.8087 down to 0.8007. Section 1 already established the column is informative, so this is a failure of the encoding rather than a failure of the underlying data, and it's worth seeing exactly why in a picture rather than only in a single dropped number.</p>
+
+    <div class="diagram">
+      
+<svg viewBox="0 0 1010 246" xmlns="http://www.w3.org/2000/svg" width="1010" height="246">
+  <style> text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; } </style>
+  <rect x="10" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="10" width="16.5" height="12.5" fill="#0E6B62"/><rect x="388" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="10" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="24" width="16.5" height="12.5" fill="#0E6B62"/><rect x="190" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="24" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="38" width="16.5" height="12.5" fill="#0E6B62"/><rect x="478" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="38" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="52" width="16.5" height="12.5" fill="#0E6B62"/><rect x="82" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="52" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="66" width="16.5" height="12.5" fill="#0E6B62"/><rect x="100" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="66" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="80" width="16.5" height="12.5" fill="#0E6B62"/><rect x="640" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="80" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="94" width="16.5" height="12.5" fill="#0E6B62"/><rect x="136" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="94" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="108" width="16.5" height="12.5" fill="#0E6B62"/><rect x="442" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="108" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="122" width="16.5" height="12.5" fill="#0E6B62"/><rect x="694" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="122" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="136" width="16.5" height="12.5" fill="#0E6B62"/><rect x="82" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="136" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="150" width="16.5" height="12.5" fill="#0E6B62"/><rect x="604" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="150" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="164" width="16.5" height="12.5" fill="#0E6B62"/><rect x="262" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="164" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="178" width="16.5" height="12.5" fill="#0E6B62"/><rect x="64" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="118" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="178" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="10" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="28" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="46" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="64" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="82" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="100" y="192" width="16.5" height="12.5" fill="#0E6B62"/><rect x="118" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="136" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="154" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="172" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="190" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="208" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="226" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="244" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="262" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="280" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="298" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="316" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="334" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="352" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="370" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="388" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="406" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="424" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="442" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="460" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="478" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="496" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="514" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="532" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="550" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="568" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="586" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="604" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="622" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="640" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="658" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="676" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="694" y="192" width="16.5" height="12.5" fill="#EFEBDD"/><rect x="712" y="192" width="16.5" height="12.5" fill="#EFEBDD"/>
+  <text x="760" y="63.0" style="font-size:13.5px;font-weight:700;" fill="#0E6B62">14 customers shown</text>
+  <text x="760" y="83.0" style="font-size:12px;" fill="#565246">of 322 bundle columns,</text>
+  <text x="760" y="101.0" style="font-size:12px;" fill="#565246">one cell in each row is</text>
+  <text x="760" y="119.0" style="font-size:12px;" fill="#565246">a 1. Every other cell,</text>
+  <text x="760" y="137.0" style="font-size:12px;" fill="#565246">shown pale, is a 0.</text>
+  <text x="760" y="165.0" style="font-size:12px;font-weight:700;" fill="#A8442F">across all 7,032 rows,</text>
+  <text x="760" y="183.0" style="font-size:12px;font-weight:700;" fill="#A8442F">the average column is</text>
+  <text x="760" y="201.0" style="font-size:12px;font-weight:700;" fill="#A8442F">a 1 for about 22 rows.</text>
+</svg>
+
+    </div>
+
+    <p>Three separate problems compound at once here. <strong>Each column ends up almost entirely zeros.</strong> With 322 categories spread across 7,032 rows, the average column reads 1 for only about 22 of them, which is very little evidence for a single coefficient to be estimated from. <strong>Rare categories produce coefficients that are pure noise.</strong> A bundle appearing exactly twice gets its own column and its own fitted parameter, estimated from two observations, and the model uses that parameter with exactly as much confidence as one estimated from a thousand. <strong>325 columns against 7,032 rows hands the model far more freedom than the data can actually support</strong>, so it ends up fitting patterns specific to the training folds that simply don't carry over to the validation fold.</p>
+
+    <p>This is precisely the point at which something other than one-hot becomes necessary rather than merely nice to have. Sections 4 and 5 work through the alternatives, and section 6 comes back to show that one-hot itself can be rescued, provided the rare categories get dealt with first.</p>
+  </div>
+</section>
+
+
+<section class="sec">
+  <div class="wrap">
+    <h2 class="sec-title"><span class="num">4</span>Target encoding, and the leak that comes with it</h2>
+    <p class="sec-dek">The strongest technique in this notebook for high-cardinality columns, and the one most likely to hand you a beautiful, false validation score</p>
+
+    <p>Target encoding replaces each category with the average target value observed for that category. Every one of the 322 bundles becomes the churn rate of the customers who share it, and 322 categories collapse into a single numeric column that's directly, immediately meaningful: a bundle encoded as 0.65 is a bundle whose customers churn at 65%. It's the strongest technique this notebook covers for high-cardinality columns. It's also the one most capable of silently handing you an excellent validation score attached to a model that fails once it reaches production, so the honest way to introduce it is to do it wrong first and measure exactly what that costs.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">The wrong way: building the mapping from the whole dataset, then cross-validating as if that were fine</div><pre class="code"><code><span class="c1"># THE WRONG WAY: compute the mapping from the whole dataset, then cross-validate</span>
+<span class="n">leaky_map</span> <span class="o">=</span> <span class="n">churned</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">leaky</span> <span class="o">=</span> <span class="n">numeric_only</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">bundle_te</span><span class="o">=</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">leaky_map</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Each bundle replaced by its churn rate, computed over all 7,032 rows:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">leaky</span><span class="p">[[</span><span class="s1">&#39;bundle_te&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Cross-validated AUC: </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">leaky</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Baseline           : </span><span class="si">{</span><span class="n">BASELINE</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;That looks like a large improvement. It is not real.&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Each bundle replaced by its churn rate, computed over all 7,032 rows:
+ bundle_te
+    0.3871
+    0.1111
+    0.2051
+
+Cross-validated AUC: 0.8450
+Baseline           : 0.8087
+
+That looks like a large improvement. It is not real.</pre></div>
+
+    <p>That reads like a substantial improvement, from a baseline of 0.8087 up to 0.8450. It's not a real one, and the reason it survives casual code review is that nothing about the code looks obviously broken.</p>
+
+    <p><code class="inline-code">cross_val_score</code> does split the data into five folds and truly holds one out on each pass. But the churn-rate mapping itself was built <em>before</em> that split ever happened, using every single row, including the ones about to sit in whichever fold gets held out. When the model is scored on fold 3, the encoded value it reads for each customer in that fold was computed partly from that exact customer's own churn outcome. The effect is worst precisely where the data is thinnest: a bundle appearing exactly twice takes the plain average of those two customers' outcomes, so if both of them churned, the encoded value is a flat 1.0, and the model reads that value back for those same two customers at the moment it's supposedly being evaluated on unseen data. That isn't a subtle statistical bias. It's the model being handed the answer key for part of its own exam.</p>
+
+    <p>Two separate fixes are needed here, because two separate things have gone wrong. The first is the leakage rule already familiar from every notebook in this series: fit the mapping inside a pipeline, so it only ever sees training rows. The second is specific to target encoding and easy to miss even once the first fix is in place: <em>even within the training set</em>, a single row shouldn't be allowed to contribute to the very mapping later used to encode that same row, which requires an internal cross-fitting scheme rather than a single pass over the training data. <code class="inline-code">sklearn.preprocessing.TargetEncoder</code> handles both automatically.</p>
+
+    <div class="diagram">
+      
+<svg viewBox="0 0 900 290" xmlns="http://www.w3.org/2000/svg" width="900" height="290">
+  <style> text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; } </style>
+  <defs>
+    <marker id="arrowT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9A957C"/>
+    </marker>
+  </defs>
+
+  <text x="20" y="24" style="font-size:14px;font-weight:700;" fill="#A8442F">the wrong way</text>
+  <rect x="20" y="36" width="230" height="50" rx="8" fill="#F7ECE7" stroke="#EBD3C8"/>
+  <text x="135" y="58" text-anchor="middle" style="font-size:12.5px;font-weight:600;" fill="#7A3220">map built from all 7,032 rows</text>
+  <text x="135" y="75" text-anchor="middle" style="font-size:10.5px;" fill="#a5654f">including the ones about to be tested</text>
+  <path d="M 250 61 L 290 61" stroke="#9A957C" stroke-width="2" marker-end="url(#arrowT)"/>
+  <rect x="294" y="36" width="230" height="50" rx="8" fill="#F7ECE7" stroke="#EBD3C8"/>
+  <text x="409" y="58" text-anchor="middle" style="font-size:12.5px;font-weight:600;" fill="#7A3220">a fold's own rows leak into</text>
+  <text x="409" y="75" text-anchor="middle" style="font-size:10.5px;" fill="#a5654f">the number used to score them</text>
+  <path d="M 524 61 L 564 61" stroke="#9A957C" stroke-width="2" marker-end="url(#arrowT)"/>
+  <rect x="568" y="36" width="230" height="50" rx="8" fill="#A8442F" stroke="#7A3220"/>
+  <text x="683" y="58" text-anchor="middle" style="font-size:12.5px;font-weight:700;" fill="#FAF8F3">reported AUC 0.8450</text>
+  <text x="683" y="75" text-anchor="middle" style="font-size:10.5px;" fill="#F0DFC8">the model is reading the answer</text>
+
+  <text x="20" y="140" style="font-size:14px;font-weight:700;" fill="#0E6B62">the right way</text>
+  <rect x="20" y="152" width="230" height="50" rx="8" fill="#EAF3F1" stroke="#CFE3DF"/>
+  <text x="135" y="174" text-anchor="middle" style="font-size:12.5px;font-weight:600;" fill="#0A4F49">map built from training rows only</text>
+  <text x="135" y="191" text-anchor="middle" style="font-size:10.5px;" fill="#3f8079">test rows never seen</text>
+  <path d="M 250 177 L 290 177" stroke="#9A957C" stroke-width="2" marker-end="url(#arrowT)"/>
+  <rect x="294" y="152" width="230" height="50" rx="8" fill="#EAF3F1" stroke="#CFE3DF"/>
+  <text x="409" y="174" text-anchor="middle" style="font-size:12.5px;font-weight:600;" fill="#0A4F49">cross-fit within training too</text>
+  <text x="409" y="191" text-anchor="middle" style="font-size:10.5px;" fill="#3f8079">a row never encodes itself</text>
+  <path d="M 524 177 L 564 177" stroke="#9A957C" stroke-width="2" marker-end="url(#arrowT)"/>
+  <rect x="568" y="152" width="230" height="50" rx="8" fill="#0E6B62" stroke="#0A4F49">
+  </rect>
+  <text x="683" y="174" text-anchor="middle" style="font-size:12.5px;font-weight:700;" fill="#FAF8F3">true AUC 0.8250</text>
+  <text x="683" y="191" text-anchor="middle" style="font-size:10.5px;" fill="#CFE3DF">what production will actually see</text>
+
+  <text x="450" y="240" text-anchor="middle" style="font-size:12.5px;font-style:italic;" fill="#565246">0.0200 AUC of pure leakage &#8212; small enough to look plausible, which is what makes it dangerous</text>
+  <text x="450" y="265" text-anchor="middle" style="font-size:12.5px;" fill="#565246"><tspan font-weight="700">TargetEncoder</tspan> handles both layers automatically when it sits inside a pipeline</text>
+</svg>
+
+    </div>
+
+    <div class="code-wrap">
+<div class="blk-caption">The right way: TargetEncoder, cross-fitted, sitting inside the pipeline</div><pre class="code"><code><span class="c1"># THE RIGHT WAY: TargetEncoder inside the pipeline, cross-fitted internally</span>
+<span class="n">preprocess</span> <span class="o">=</span> <span class="n">ColumnTransformer</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">&#39;numeric&#39;</span><span class="p">,</span> <span class="s1">&#39;passthrough&#39;</span><span class="p">,</span> <span class="n">NUMERIC</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;target_encode&#39;</span><span class="p">,</span> <span class="n">TargetEncoder</span><span class="p">(</span><span class="n">target_type</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]),</span>
+<span class="p">])</span>
+
+<span class="n">proper</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span><span class="n">preprocess</span><span class="p">,</span> <span class="n">StandardScaler</span><span class="p">(),</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">3000</span><span class="p">))</span>
+<span class="n">proper_auc</span> <span class="o">=</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">proper</span><span class="p">,</span> <span class="n">telco</span><span class="p">[</span><span class="n">NUMERIC</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]],</span> <span class="n">churned</span><span class="p">,</span>
+                             <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;approach&quot;</span><span class="si">:</span><span class="s1">38s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;columns&quot;</span><span class="si">:</span><span class="s1">&gt;8s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;AUC&quot;</span><span class="si">:</span><span class="s1">&gt;9s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">58</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;numeric only&quot;</span><span class="si">:</span><span class="s1">38s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="mi">3</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">BASELINE</span><span class="si">:</span><span class="s1">&gt;9.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;bundle one-hot&quot;</span><span class="si">:</span><span class="s1">38s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="mi">325</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">bundle_onehot</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;9.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;bundle target-encoded, LEAKED&quot;</span><span class="si">:</span><span class="s1">38s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="mi">4</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">leaky</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;9.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;bundle target-encoded, PROPER&quot;</span><span class="si">:</span><span class="s1">38s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="mi">4</span><span class="si">:</span><span class="s1">&gt;8d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">proper_auc</span><span class="si">:</span><span class="s1">&gt;9.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">approach                                columns       AUC
+----------------------------------------------------------
+numeric only                                  3    0.8087
+bundle one-hot                              325    0.8007</pre><pre class="out">bundle target-encoded, LEAKED                 4    0.8450
+bundle target-encoded, PROPER                 4    0.8250</pre></div>
+
+    <p>The leak inflated the reported score by 0.0200 AUC: a true 0.8250 reported as 0.8450. It's worth sitting with what that gap actually means in a real project rather than treating it as an abstract statistic. You would have reported 0.845 to a team, made a rollout decision that assumed that number, and then watched the deployed model quietly perform like the 0.825 model it always actually was. The size of that gap is exactly what makes it dangerous: a leak inflating a score to 0.99 gets noticed immediately, because nobody believes it. A leak inflating a score by two points sails through review, because it looks like a good day of feature engineering rather than a bug.</p>
+
+    <p>The honest result underneath the leak is still excellent in its own right. Proper target encoding reaches 0.8250 using a single column, ahead of one-hot's 0.8007 from 322 columns, and ahead of the 0.8087 baseline that ignores the column outright. That's the largest single-column gain anywhere in this series so far. To make the leak concrete rather than purely statistical, it's worth watching it happen once on an actual held-out test set rather than only inside cross-validation.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">The same leak, demonstrated on a genuine train/test split</div><pre class="code"><code><span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+    <span class="n">telco</span><span class="p">,</span> <span class="n">churned</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">churned</span><span class="p">)</span>
+
+<span class="c1"># Version A: mapping built from ALL rows, including the test set</span>
+<span class="n">map_all</span> <span class="o">=</span> <span class="n">churned</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">model_a</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span><span class="n">StandardScaler</span><span class="p">(),</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">3000</span><span class="p">))</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">train</span><span class="p">[</span><span class="n">NUMERIC</span><span class="p">]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">te</span><span class="o">=</span><span class="n">train</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_all</span><span class="p">)),</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">auc_a</span> <span class="o">=</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">model_a</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span>
+    <span class="n">test</span><span class="p">[</span><span class="n">NUMERIC</span><span class="p">]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">te</span><span class="o">=</span><span class="n">test</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_all</span><span class="p">)))[:,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># Version B: mapping built from TRAINING rows only, unseen bundles fall back to the prior</span>
+<span class="n">map_train</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">train</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">prior</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">model_b</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span><span class="n">StandardScaler</span><span class="p">(),</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">3000</span><span class="p">))</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">train</span><span class="p">[</span><span class="n">NUMERIC</span><span class="p">]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">te</span><span class="o">=</span><span class="n">train</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_train</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">prior</span><span class="p">)),</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">auc_b</span> <span class="o">=</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">model_b</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span>
+    <span class="n">test</span><span class="p">[</span><span class="n">NUMERIC</span><span class="p">]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">te</span><span class="o">=</span><span class="n">test</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_train</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">prior</span><span class="p">)))[:,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Mapping built from all rows,      test AUC = </span><span class="si">{</span><span class="n">auc_a</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">   &lt;- flattering and false&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Mapping built from training only, test AUC = </span><span class="si">{</span><span class="n">auc_b</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">   &lt;- what you would actually get&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Mapping built from all rows,      test AUC = 0.8418   &lt;- flattering and false
+Mapping built from training only, test AUC = 0.8153   &lt;- what you would actually get</pre></div>
+
+    <p>0.8418 against 0.8153. The first of those numbers is not a better model. It's the identical model being graded on an exam it had already secretly seen the answers to.</p>
+
+    <h4 class="subsub">Smoothing, for categories with too little evidence to trust on their own</h4>
+    <p>One issue remains even once the leakage itself is fully handled. A bundle seen exactly three times, none of whom churned, has an observed rate of a flat 0.0, and taking that number at face value tells the model those specific customers never leave, ever. Three observations cannot actually support a claim that strong.</p>
+
+    <p>Smoothing addresses this by blending each category's own average toward the overall average, weighted by how much evidence that category actually has behind it:</p>
+    <p style="text-align:center;font-style:italic;color:var(--ink-soft);">encoded = (n &times; category_mean + m &times; overall_mean) / (n + m)</p>
+    <p>Here <code class="inline-code">n</code> is how many rows the category has, and <code class="inline-code">m</code> is a chosen constant controlling how strongly the overall average pulls on categories with little evidence. Categories with plenty of rows barely move at all. Categories with almost no rows get pulled most of the way toward the prior.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Smoothing in practice, at three different strengths</div><pre class="code"><code><span class="n">overall</span> <span class="o">=</span> <span class="n">churned</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+
+<span class="n">examples</span> <span class="o">=</span> <span class="p">[</span><span class="n">counts</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">counts</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">counts</span><span class="p">[</span><span class="n">counts</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Overall churn rate (the prior) = </span><span class="si">{</span><span class="n">overall</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;customers&quot;</span><span class="si">:</span><span class="s1">&gt;10s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;raw mean&quot;</span><span class="si">:</span><span class="s1">&gt;10s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;m=0&quot;</span><span class="si">:</span><span class="s1">&gt;8s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;m=10&quot;</span><span class="si">:</span><span class="s1">&gt;8s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;m=50&quot;</span><span class="si">:</span><span class="s1">&gt;8s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">48</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">bundle</span> <span class="ow">in</span> <span class="n">examples</span><span class="p">:</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">bundle</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">churned</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">smoothed</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span> <span class="o">*</span> <span class="n">raw</span> <span class="o">+</span> <span class="n">m</span> <span class="o">*</span> <span class="n">overall</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">)]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s1">&gt;10d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">raw</span><span class="si">:</span><span class="s1">&gt;10.3f</span><span class="si">}</span><span class="s1"> &#39;</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">s</span><span class="si">:</span><span class="s1">&gt;8.3f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">smoothed</span><span class="p">))</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Overall churn rate (the prior) = 0.266
+
+ customers   raw mean      m=0     m=10     m=50
+------------------------------------------------
+      1180      0.087    0.087    0.089    0.095
+       340      0.029    0.029    0.036    0.060
+         3      0.000    0.000    0.204    0.251</pre></div>
+
+    <p>The bundle with 1,180 customers barely moves, from 0.087 to 0.095 even at the strongest smoothing tested. It has more than enough evidence to speak entirely for itself. The bundle with only 3 customers moves from a raw 0.000 all the way to 0.251, landing close to the 0.266 dataset-wide prior. With three observations, the honest thing to encode is close to "nothing specific is known about this group yet," which is exactly what heavy smoothing expresses numerically.</p>
+
+    <p><code class="inline-code">TargetEncoder</code> applies smoothing automatically, controlled by <code class="inline-code">smooth='auto'</code> by default, which is why none of this had to be handled by hand in the pipeline above. Knowing the underlying mechanism still matters in practice: when a target-encoded column's values all sit suspiciously close to the overall mean, smoothing pulling on thin categories is usually the reason, not a bug.</p>
+
+    <div class="callout rule">
+      <span class="callout-label">When to reach for target encoding, and when not to</span>
+      <p>Reach for it on high-cardinality nominal columns, where one-hot would produce far too many columns, and where enough rows sit behind each category for an average to actually mean something. Always inside a pipeline, always cross-fitted, always with smoothing switched on. Avoid it on small datasets, where nearly every category ends up rare and the encoding becomes mostly noise, and avoid it on anything close to an identifier, where target encoding becomes close to a direct route to memorizing the target outright. Notebook 1's <code class="inline-code">customerID</code> would be the extreme version of exactly that failure.</p>
+    </div>
+  </div>
+</section>
+
+
+<section class="sec">
+  <div class="wrap">
+    <h2 class="sec-title"><span class="num">5</span>Frequency encoding and the hashing trick</h2>
+    <p class="sec-dek">Two more options for high-cardinality columns, and both ignore the target entirely, which means neither one can leak</p>
+
+    <p><strong>Frequency encoding</strong> replaces each category with how often it appears in the data. It produces a single column, needs no access to the target at all, and carries one specific implicit claim: that how common something is might itself be predictive, independent of anything else about it.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Frequency encoding, measured the same way as everything else</div><pre class="code"><code><span class="n">frequencies</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">telco</span><span class="p">))</span>
+<span class="n">freq_encoded</span> <span class="o">=</span> <span class="n">numeric_only</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">bundle_freq</span><span class="o">=</span><span class="n">frequencies</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Frequency encoded : AUC </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">freq_encoded</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Baseline          : AUC </span><span class="si">{</span><span class="n">BASELINE</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Target encoded    : AUC </span><span class="si">{</span><span class="n">proper_auc</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Frequency encoded : AUC 0.8094
+Baseline          : AUC 0.8087
+Target encoded    : AUC 0.8250</pre></div>
+
+    <p>0.8094 against a 0.8087 baseline. Essentially nothing, and reporting that plainly matters more than it might seem, since a negative or null result is still a result worth having on record rather than quietly dropping. Frequency encoding earns its keep specifically when rarity itself carries signal, which is genuinely true in domains like fraud detection, where an unusual merchant category is itself grounds for suspicion. Here, how common a particular service bundle happens to be has almost no relationship to whether that customer eventually churns, so the encoding faithfully captures a variable that simply doesn't matter much to this particular question. The technique is cheap, safe, and always worth trying quickly. It is not a substitute for target encoding when target encoding is actually available to you.</p>
+
+    <p><strong>The hashing trick</strong> takes a different route entirely. It runs each category through a hash function and uses the result to select a column, mapping any number of categories, however many there are, into a fixed number of columns chosen in advance. Different categories can and will collide into the same column, and the working bet is that those collisions are rare and random enough not to matter much in practice.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Hashing 322 categories into progressively fewer columns</div><pre class="code"><code><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;columns&quot;</span><span class="si">:</span><span class="s1">&gt;9s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;categories per bucket&quot;</span><span class="si">:</span><span class="s1">&gt;24s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;LogReg AUC&quot;</span><span class="si">:</span><span class="s1">&gt;12s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">48</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">n_features</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">]:</span>
+    <span class="n">hasher</span> <span class="o">=</span> <span class="n">FeatureHasher</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="n">n_features</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;string&#39;</span><span class="p">)</span>
+    <span class="n">hashed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">hasher</span><span class="o">.</span><span class="n">transform</span><span class="p">([[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toarray</span><span class="p">(),</span>
+                          <span class="n">index</span><span class="o">=</span><span class="n">telco</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;hash_&#39;</span><span class="p">)</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">logreg_auc</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">numeric_only</span><span class="p">,</span> <span class="n">hashed</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">n_features</span><span class="si">:</span><span class="s1">&gt;9d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">telco</span><span class="p">[</span><span class="s2">&quot;bundle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">n_features</span><span class="si">:</span><span class="s1">&gt;24.1f</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">48</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="mi">325</span><span class="si">:</span><span class="s1">&gt;9d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="mf">1.0</span><span class="si">:</span><span class="s1">&gt;24.1f</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">bundle_onehot</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1">   &lt;- one-hot, for comparison&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">  columns    categories per bucket   LogReg AUC
+------------------------------------------------</pre><pre class="out">        8                     40.2       0.8087
+       16                     20.1       0.8107
+       32                     10.1       0.8142
+       64                      5.0       0.8156
+------------------------------------------------</pre><pre class="out">      325                      1.0       0.8007   &lt;- one-hot, for comparison</pre></div>
+
+    <p>Hashing 322 categories down into 64 columns scores 0.8156, beating one-hot's 0.8007 while using a fifth of the columns. That's genuinely surprising at first glance, since hashing deliberately throws away information by allowing categories to collide with each other. The explanation is that one-hot's problem was never a shortage of information; it was too many parameters being estimated from too few rows apiece. Hashing forces multiple categories to share a column, each resulting column ends up with far more non-zero rows behind it, and the coefficients that emerge become genuinely estimable rather than fitted from a handful of examples. The collisions cost noticeably less than the original sparsity did.</p>
+
+    <p>Where hashing earns its place is at a scale one-hot and target encoding both struggle with. With 500,000 distinct user IDs, one-hot is simply not feasible, and target encoding needs a 500,000-entry lookup table shipped and maintained alongside the model. A hasher needs no stored vocabulary of any kind, since the hash function itself is fixed in advance, so it handles categories it has genuinely never encountered without any special-case logic, and it runs in constant memory regardless of how many distinct categories eventually show up.</p>
+
+    <p>The cost is interpretability, and it's a real one. Column <code class="inline-code">hash_37</code> holds an arbitrary mixture of unrelated categories and means nothing at all to a human reading it, so feature importance computed on hashed columns can't be explained to anyone afterward. Reach for hashing when cardinality is truly enormous, and prefer target encoding whenever cardinality is merely large rather than extreme.</p>
+  </div>
+</section>
+
+
+<section class="sec">
+  <div class="wrap">
+    <h2 class="sec-title"><span class="num">6</span>Unseen and rare categories</h2>
+    <p class="sec-dek">The two failure modes that show up only after deployment, and stay completely invisible while you're working with one fixed dataset</p>
+
+    <p><strong>Unseen categories</strong> are values that appear at prediction time and were never present anywhere in the training data. A new payment method launches, a new product line gets added, a new city gets its own warehouse. Whatever encoder is sitting in the pipeline has never encountered that value and has to do something with it regardless.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">How many unseen bundles show up, purely as a function of which random split gets drawn</div><pre class="code"><code><span class="c1"># How many unseen bundles appear depends entirely on which split you happen to draw</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;test size&quot;</span><span class="si">:</span><span class="s1">&gt;10s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;seed&quot;</span><span class="si">:</span><span class="s1">&gt;6s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;unseen bundles&quot;</span><span class="si">:</span><span class="s1">&gt;16s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;rows affected&quot;</span><span class="si">:</span><span class="s1">&gt;15s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">52</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">test_size</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.40</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">tr</span><span class="p">,</span> <span class="n">te</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">telco</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="n">test_size</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">churned</span><span class="p">)</span>
+        <span class="n">unseen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">te</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">tr</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">test_size</span><span class="si">:</span><span class="s1">&gt;10.2f</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">seed</span><span class="si">:</span><span class="s1">&gt;6d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">unseen</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;16d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">te</span><span class="p">[</span><span class="s2">&quot;bundle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">unseen</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">:</span><span class="s1">&gt;15d</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out"> test size   seed   unseen bundles   rows affected
+----------------------------------------------------
+      0.25      0                2               4</pre><pre class="out">      0.25      1                0               0
+      0.25      2                2               5
+      0.25      3                2               5
+      0.40      0                8              24
+      0.40      1                3               6
+      0.40      2                8              22
+      0.40      3                7              16</pre></div>
+
+    <p>Between 0 and 8 unseen categories, decided entirely by which random seed happens to be used for the split. That variability is itself the actual lesson here, more than any single count. Draw seed 1 at a 25% test size and no unseen categories appear at all; conclude on that basis that the encoding is fine, and ship it with genuine confidence. Draw seed 0 on the identical data and the problem is immediately visible. Whether this bug gets caught during development is mostly a matter of luck, which is why it has to be handled by design from the start rather than by testing until it happens to show up on its own.</p>
+
+    <p>Since a lucky split can't be relied on to demonstrate the failure reliably, the next cell forces it with a category guaranteed not to exist anywhere in the data.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Four encoders, one brand-new category, four different responses</div><pre class="code"><code><span class="n">encoder_input</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]]</span>
+<span class="n">brand_new</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;bundle&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Yes|Yes|Satellite|Yes|Yes|Yes|Yes|Yes|Yes&#39;</span><span class="p">]})</span>   <span class="c1"># a service we never sold</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Fitting on all 322 known bundles, then asking about a bundle that has never existed.&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">handle_unknown</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">encoder_input</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">brand_new</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;handle_unknown=&#39;error&#39;   -&gt; ValueError: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)[:</span><span class="mi">70</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+<span class="n">ignored</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">handle_unknown</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">sparse_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">encoder_input</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">brand_new</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;handle_unknown=&#39;ignore&#39;  -&gt; all </span><span class="si">{</span><span class="n">ignored</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> columns are zero: </span><span class="si">{</span><span class="nb">bool</span><span class="p">((</span><span class="n">ignored</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">infreq</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">min_frequency</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">handle_unknown</span><span class="o">=</span><span class="s1">&#39;infrequent_if_exist&#39;</span><span class="p">,</span>
+                       <span class="n">sparse_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">encoder_input</span><span class="p">)</span>
+<span class="n">routed</span> <span class="o">=</span> <span class="n">infreq</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">brand_new</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;handle_unknown=&#39;infrequent_if_exist&#39; -&gt; routed into the rare bucket, &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;column </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">routed</span><span class="p">))</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">routed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">te_encoder</span> <span class="o">=</span> <span class="n">TargetEncoder</span><span class="p">(</span><span class="n">target_type</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">RANDOM_STATE</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">encoder_input</span><span class="p">,</span> <span class="n">churned</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TargetEncoder            -&gt; unseen category gets the overall mean: &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">te_encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">brand_new</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">  (dataset rate </span><span class="si">{</span><span class="n">churned</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">Fitting on all 322 known bundles, then asking about a bundle that has never existed.
+
+handle_unknown=&#x27;error&#x27;   -&gt; ValueError: Found unknown categories [&#x27;Yes|Yes|Satellite|Yes|Yes|Yes|Yes|Yes|Yes&#x27;]...
+handle_unknown=&#x27;ignore&#x27;  -&gt; all 322 columns are zero: True
+handle_unknown=&#x27;infrequent_if_exist&#x27; -&gt; routed into the rare bucket, column 76 of 77
+TargetEncoder            -&gt; unseen category gets the overall mean: 0.2658  (dataset rate 0.2658)</pre></div>
+
+    <p>Four different answers to an identical question, and none of them is automatically the right one to reach for.</p>
+
+    <ul>
+      <li><strong><code class="inline-code">handle_unknown='error'</code></strong> fails loudly and immediately. The right choice when an unknown category really does signal that something has gone wrong upstream, and you'd rather know about it before serving a prediction than after.</li>
+      <li><strong><code class="inline-code">handle_unknown='ignore'</code></strong> encodes the row as all zeros across every one of that column's dummy columns. The model still returns a prediction, built entirely from whatever other features are available. This is usually the right behavior for a service that has to stay up regardless, and it's worth remembering that "all zeros" is itself a pattern the model never actually saw during training either.</li>
+      <li><strong><code class="inline-code">handle_unknown='infrequent_if_exist'</code></strong> routes an unknown value into the same bucket already used for rare training categories, which is more principled than falling back to all-zeros, because that particular bucket has genuinely been trained on real data.</li>
+      <li><strong><code class="inline-code">TargetEncoder</code></strong> returns the overall mean, 0.2658, which is exactly the dataset's churn rate. Knowing nothing specific about a category, predicting the dataset average is the correct default, not a fallback to apologize for.</li>
+    </ul>
+
+    <p><strong>Rare categories</strong> are the closely related problem on the training side. They're present during training, but with so few supporting rows that anything learned specifically about them amounts to noise. Section 3 already showed one-hot encoding the full bundle column scoring worse than dropping it outright, and rare categories were a large part of exactly why.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">Grouping rare bundles into a single Other category, at several thresholds</div><pre class="code"><code><span class="n">counts</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;min rows to keep&quot;</span><span class="si">:</span><span class="s1">&gt;17s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;categories&quot;</span><span class="si">:</span><span class="s1">&gt;12s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;columns&quot;</span><span class="si">:</span><span class="s1">&gt;9s</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">&quot;LogReg AUC&quot;</span><span class="si">:</span><span class="s1">&gt;12s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">54</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">threshold</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">]:</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">counts</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">keep</span><span class="p">),</span> <span class="s1">&#39;Other&#39;</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">numeric_only</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">grouped</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">threshold</span><span class="si">:</span><span class="s1">&gt;17d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">grouped</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">:</span><span class="s1">&gt;12d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">&gt;9d</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">logreg_auc</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;12.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out"> min rows to keep   categories   columns   LogReg AUC
+------------------------------------------------------
+                1          322       325       0.8007</pre><pre class="out">                5          266       269       0.8045
+               20           77        80       0.8238
+               50           23        26       0.8235
+              100           10        13       0.8168</pre></div>
+
+    <p>This is the result worth carrying out of this section above any other. One-hot encoding all 322 bundles scored 0.8007, worse than ignoring the column completely. Grouping everything appearing fewer than 20 times into a single <code class="inline-code">Other</code> bucket leaves 77 categories standing, and the score jumps to 0.8238. Genuine distinctions between 245 separate categories were deliberately erased, and the model got substantially better as a direct result.</p>
+
+    <p>The pattern traces out a clear peak rather than a straight line. Grouping too little, at a threshold of 5, leaves 266 categories and barely helps at all, reaching only 0.8045. Grouping too aggressively, at a threshold of 100, falls back to 0.8168, because by that point meaningfully different bundles are being merged together purely for lack of row count. The threshold itself is a hyperparameter to tune, and 20 to 50 happens to be the useful range on this particular column.</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">OneHotEncoder doing the identical grouping natively, and surviving into production</div><pre class="code"><code><span class="k">for</span> <span class="n">min_freq</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">]:</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">min_frequency</span><span class="o">=</span><span class="n">min_freq</span><span class="p">,</span> <span class="n">handle_unknown</span><span class="o">=</span><span class="s1">&#39;infrequent_if_exist&#39;</span><span class="p">,</span>
+                            <span class="n">sparse_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">encoded</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">telco</span><span class="p">[[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]]),</span>
+                           <span class="n">index</span><span class="o">=</span><span class="n">telco</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;b_&#39;</span><span class="p">)</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">logreg_auc</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">numeric_only</span><span class="p">,</span> <span class="n">encoded</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;OneHotEncoder(min_frequency=</span><span class="si">{</span><span class="n">min_freq</span><span class="si">:</span><span class="s1">3d</span><span class="si">}</span><span class="s1">) -&gt; </span><span class="si">{</span><span class="n">encoded</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">3d</span><span class="si">}</span><span class="s1"> columns, AUC </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Same result as the manual grouping, and it survives into production,&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;because unseen categories are routed to the infrequent bucket automatically.&#39;</span><span class="p">)</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">OneHotEncoder(min_frequency= 20) -&gt;  77 columns, AUC 0.8238
+OneHotEncoder(min_frequency= 50) -&gt;  23 columns, AUC 0.8235
+
+Same result as the manual grouping, and it survives into production,
+because unseen categories are routed to the infrequent bucket automatically.</pre></div>
+
+    <p><code class="inline-code">OneHotEncoder</code>'s own <code class="inline-code">min_frequency</code> parameter reproduces the manual grouping result exactly, while keeping the whole operation inside a pipeline where it belongs. It also survives contact with production in a way the manual version can't on its own, because unseen categories at prediction time get routed automatically into that same infrequent bucket, using the identical mechanism from the unseen-category discussion just above.</p>
+  </div>
+</section>
+
+
+<section class="sec">
+  <div class="wrap">
+    <h2 class="sec-title"><span class="num">7</span>Putting the comparison together</h2>
+    <p class="sec-dek">Every encoding covered in this notebook, applied to the identical column and scored the identical way</p>
+
+    <div class="code-wrap">
+<div class="blk-caption">The full leaderboard</div><pre class="code"><code><span class="n">summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">&#39;ignore the column&#39;</span><span class="p">,</span>        <span class="mi">3</span><span class="p">,</span>   <span class="n">BASELINE</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;label encoding&#39;</span><span class="p">,</span>           <span class="mi">4</span><span class="p">,</span>   <span class="n">logreg_auc</span><span class="p">(</span><span class="n">label_bundle</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;one-hot, all 322&#39;</span><span class="p">,</span>         <span class="mi">325</span><span class="p">,</span> <span class="n">logreg_auc</span><span class="p">(</span><span class="n">bundle_onehot</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;frequency encoding&#39;</span><span class="p">,</span>       <span class="mi">4</span><span class="p">,</span>   <span class="n">logreg_auc</span><span class="p">(</span><span class="n">freq_encoded</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;hashing, 64 columns&#39;</span><span class="p">,</span>      <span class="mi">67</span><span class="p">,</span>  <span class="n">logreg_auc</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">numeric_only</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">FeatureHasher</span><span class="p">(</span><span class="n">n_features</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;string&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+            <span class="p">[[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toarray</span><span class="p">(),</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">telco</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;hash_&#39;</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))),</span>
+    <span class="p">(</span><span class="s1">&#39;one-hot, rare grouped&#39;</span><span class="p">,</span>    <span class="mi">80</span><span class="p">,</span>  <span class="n">logreg_auc</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">numeric_only</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span>
+        <span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">telco</span><span class="p">[</span><span class="s1">&#39;bundle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="n">counts</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="s1">&#39;Other&#39;</span><span class="p">),</span>
+        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))),</span>
+    <span class="p">(</span><span class="s1">&#39;target encoding, proper&#39;</span><span class="p">,</span>  <span class="mi">4</span><span class="p">,</span>   <span class="n">proper_auc</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;target encoding, LEAKED&#39;</span><span class="p">,</span>  <span class="mi">4</span><span class="p">,</span>   <span class="n">logreg_auc</span><span class="p">(</span><span class="n">leaky</span><span class="p">)),</span>
+<span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;encoding&#39;</span><span class="p">,</span> <span class="s1">&#39;columns&#39;</span><span class="p">,</span> <span class="s1">&#39;AUC&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;AUC&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</code></pre>
+</div><div class="output-wrap"><div class="blk-caption out-caption">Output</div><pre class="out">               encoding  columns    AUC
+       one-hot, all 322      325 0.8007
+      ignore the column        3 0.8087
+         label encoding        4 0.8087
+     frequency encoding        4 0.8094
+    hashing, 64 columns       67 0.8156
+  one-hot, rare grouped       80 0.8238
+target encoding, proper        4 0.8250
+target encoding, LEAKED        4 0.8450</pre></div>
+
+    <p>Reading that table from the bottom up tells the more useful story. The leaked target encoding sits at the very top, and it's the only entry in the whole table that isn't a real result at all; setting it aside, proper target encoding wins outright at 0.8250 using four columns total, with rare-grouped one-hot close behind at 0.8238 using eighty.</p>
+
+    <p>Those two are close enough that the choice between them stops being about the score and becomes a question of engineering trade-offs instead. Target encoding is far more compact and needs careful cross-fitting to stay safe. Grouped one-hot is more transparent, structurally cannot leak the way target encoding can, and every one of its columns still means something a person can point to directly. On a production system, I would personally want a specific, strong reason before choosing the technique that fails silently over the one that simply cannot.</p>
+
+    <p>At the bottom of the table, label encoding and unrestricted one-hot both land at or below the baseline that ignores the column outright. Both took a genuinely informative column and rendered it useless, arriving at that failure from opposite directions: one destroyed every distinction the column carried, the other kept all 322 of them and handed the model nothing solid enough to actually estimate from.</p>
+  </div>
+</section>
+
+
+<section class="sec">
+  <div class="wrap">
+    <div class="takeaway-box">
+      <h2 class="sec-title">Key things to remember from this notebook</h2>
+      <p><strong>Encoding is a claim about the data, not a formatting step.</strong> Ordinal encoding asserts an ordering, and that assertion can simply be false. <code class="inline-code">Contract</code> encoded in its true order scored 0.8278 from a single column, matching one-hot's 0.8276 from three, while the identical technique with a shuffled order lost 0.0081. If you know the order, state it explicitly, because <code class="inline-code">OrdinalEncoder</code> and <code class="inline-code">LabelEncoder</code> otherwise sort alphabetically and let spelling decide the ranking for you.</p>
+      <p><strong>Label encoding hurts linear models and mostly spares trees.</strong> On <code class="inline-code">PaymentMethod</code> it cost logistic regression 0.0087 AUC while the random forest was essentially unaffected, because a linear model gets exactly one coefficient for the whole column while a tree can split it apart repeatedly. Label encoding the 322-category bundle column scored 0.8087, precisely the baseline, destroying a column whose churn rates genuinely ran from 0% to 73.9%.</p>
+      <p><strong>One-hot stops working as cardinality grows.</strong> All 322 bundles one-hot encoded scored 0.8007, worse than dropping the column entirely, because 325 columns spread across 7,032 rows leaves each coefficient estimated from roughly 22 non-zero rows. Grouping everything under 20 rows into <code class="inline-code">Other</code> cut that down to 77 categories and lifted the score to 0.8238.</p>
+      <p><strong>Target encoding is the strongest option here, and the easiest to leak with.</strong> Building the mapping before splitting reported 0.8450 against a true 0.8250, and on a genuine held-out test set the leaked version claimed 0.8418 where the honest version actually delivered 0.8153. That gap is small enough to look entirely plausible, which is exactly what makes it dangerous. Use <code class="inline-code">TargetEncoder</code> inside a pipeline, so the mapping is both fitted on training rows only and cross-fitted within them.</p>
+      <p><strong>Smooth target encodings toward the prior.</strong> A bundle with 3 customers and zero churners encodes as a raw 0.000, and a smoothed 0.251, against a 0.266 overall rate. Three observations cannot honestly support a claim of zero.</p>
+      <p><strong>Hashing beat one-hot on this data</strong>, 0.8156 from 64 columns against 0.8007 from 322, because forcing categories to share columns gave each coefficient far more supporting rows to learn from. Reach for it when cardinality is truly enormous and shipping a lookup table isn't practical, and accept that the resulting columns become uninterpretable.</p>
+      <p><strong>Decide what happens to unseen categories before deployment, not after.</strong> <code class="inline-code">handle_unknown='error'</code> fails loudly, <code class="inline-code">'ignore'</code> encodes all zeros, and <code class="inline-code">'infrequent_if_exist'</code> routes into the rare bucket that was actually trained on real data. Only 4 test rows were affected here, because this is one fixed historical extract; in a live system, that number grows every single month.</p>
+      <p>Notebook 5 moves to dates and times, where a single timestamp column hides a dozen features inside it, and the order rows arrive in starts to matter in ways it never has up to this point.</p>
+    </div>
+  </div>
+</section>
+
+</article>
+
+<footer>
+  <div class="wrap">
+    <hr class="hr-divider"/>
+    <p>This article is the companion to Notebook 4 of a feature engineering series built around the Telco Customer Churn dataset. Every code cell above runs exactly as shown in the source notebook, with its real output reproduced alongside it.</p>
+  </div>
+</footer>
+
+</body>
+</html>
